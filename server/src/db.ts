@@ -1,10 +1,12 @@
 import { Pool } from 'pg';
 
-const connString = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
+// Remove channel_binding param — not supported by node-postgres driver
+const rawConn = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL || '';
+const connString = rawConn.replace(/[?&]channel_binding=[^&]*/g, '').replace(/\?&/, '?');
 
 const pool = new Pool({
     connectionString: connString,
-    ssl: connString?.includes('sslmode=require') || process.env.NODE_ENV === 'production'
+    ssl: connString.includes('sslmode=require') || process.env.NODE_ENV === 'production'
         ? { rejectUnauthorized: false }
         : false,
 });
