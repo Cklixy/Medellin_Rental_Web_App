@@ -205,15 +205,11 @@ const AllCarsModal = ({ isOpen, onClose, cars, onSelectCar }: AllCarsModalProps)
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (car.available) {
-                          onSelectCar(car);
-                          onClose();
-                        }
+                        setDetailCar(car);
                       }}
-                      disabled={!car.available}
-                      className="w-full btn-primary flex items-center justify-center gap-2 text-sm py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full btn-primary flex items-center justify-center gap-2 text-sm py-3"
                     >
-                      <span>Reservar Ahora</span>
+                      <span>Ver Detalles</span>
                       <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>

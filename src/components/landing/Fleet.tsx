@@ -79,22 +79,33 @@ const Fleet = ({ cars, onReserve, onViewAll }: FleetProps) => {
                 </div>
 
                 {/* Hover Overlay */}
-                <div className={`absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center transition-opacity duration-300 ${
+                <div className={`absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center gap-3 transition-opacity duration-300 ${
                   hoveredCar === car.id ? 'opacity-100' : 'opacity-0'
                 }`}>
                   <button
-                    onClick={(e) => { e.stopPropagation(); onReserve(car); }}
+                    onClick={(e) => { e.stopPropagation(); setDetailCar(car); }}
                     className="btn-primary flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
                   >
-                    <span>Reservar Ahora</span>
+                    <span>Ver Detalles</span>
                     <ChevronRight className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onReserve(car); }}
+                    className="glass px-4 py-2 rounded-lg text-white/80 text-sm hover:bg-white/15 transition-colors transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500"
+                  >
+                    Reservar directo
                   </button>
                 </div>
               </div>
 
               {/* Content */}
               <div className="p-6">
-                <h3 className="text-xl font-semibold text-white mb-4">{car.name}</h3>
+                <h3 className="text-xl font-semibold text-white mb-2">{car.name}</h3>
+
+                {/* Description preview */}
+                {car.description && (
+                  <p className="text-white/50 text-sm mb-4 line-clamp-2 leading-snug">{car.description}</p>
+                )}
                 
                 {/* Specs */}
                 <div className="flex flex-wrap gap-4 mb-4">
@@ -110,7 +121,7 @@ const Fleet = ({ cars, onReserve, onViewAll }: FleetProps) => {
 
                 {/* Features */}
                 <div className="flex flex-wrap gap-2 mb-6">
-                  {car.features.map((feature) => (
+                  {car.features.slice(0, 4).map((feature) => (
                     <div
                       key={feature}
                       className="flex items-center gap-1 glass px-2 py-1 rounded-lg"
@@ -123,10 +134,10 @@ const Fleet = ({ cars, onReserve, onViewAll }: FleetProps) => {
 
                 {/* CTA */}
                 <button
-                  onClick={(e) => { e.stopPropagation(); onReserve(car); }}
+                  onClick={(e) => { e.stopPropagation(); setDetailCar(car); }}
                   className="w-full btn-primary flex items-center justify-center gap-2"
                 >
-                  <span>Reservar</span>
+                  <span>Ver Detalles</span>
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>

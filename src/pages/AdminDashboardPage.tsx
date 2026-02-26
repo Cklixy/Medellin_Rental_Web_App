@@ -172,8 +172,14 @@ function AddCarForm({ onAdd, onCancel }: AddCarFormProps) {
         <input className={input} placeholder="Ej. GPS, Techo solar, Asientos de cuero" value={form.features} onChange={e => set('features', e.target.value)} />
       </div>
       <div className="space-y-2">
-        <p className="text-white/40 text-xs uppercase tracking-wider">Descripción</p>
-        <textarea className={`${input} h-20 resize-none`} placeholder="Descripción del vehículo..." value={form.description} onChange={e => set('description', e.target.value)} />
+        <p className="text-white/40 text-xs uppercase tracking-wider">Descripción del vehículo</p>
+        <textarea
+          className={`${input} h-32 resize-none`}
+          placeholder="Describe el vehículo: potencia, confort, tecnología, experiencia de manejo..."
+          value={form.description}
+          onChange={e => set('description', e.target.value)}
+        />
+        <p className="text-white/25 text-xs">{form.description.length} caracteres — mínimo recomendado: 80</p>
       </div>
 
       {/* Disponible toggle */}
@@ -479,6 +485,9 @@ export default function AdminDashboardPage() {
                     <div className="p-4">
                       <h4 className="text-white font-semibold">{car.name}</h4>
                       <p className="text-white/50 text-sm">{car.category}</p>
+                      {car.description && (
+                        <p className="text-white/35 text-xs mt-1 line-clamp-2 leading-relaxed">{car.description}</p>
+                      )}
                       <div className="flex items-center justify-between mt-3">
                         <span className="text-red-500 font-bold text-sm">{formatPrice(car.price)}/día</span>
                         <span className="text-white/50 text-xs">{car.seats} plazas · {car.doors ?? 4} puertas</span>

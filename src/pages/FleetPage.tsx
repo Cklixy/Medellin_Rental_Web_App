@@ -195,11 +195,10 @@ export default function FleetPage() {
                   </div>
 
                   <button
-                    onClick={(e) => { e.stopPropagation(); if (car.available) openReservationModal(car); }}
-                    disabled={!car.available}
-                    className="w-full btn-primary flex items-center justify-center gap-2 text-sm py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={(e) => { e.stopPropagation(); setDetailCar(car); }}
+                    className="w-full btn-primary flex items-center justify-center gap-2 text-sm py-3"
                   >
-                    <span>Reservar Ahora</span>
+                    <span>Ver Detalles</span>
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
