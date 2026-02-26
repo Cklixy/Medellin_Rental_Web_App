@@ -20,6 +20,7 @@ const Hero = ({ onViewFleet, onReserve }: HeroProps) => {
         <img
           src="/hero-car.jpg"
           alt="Luxury Car"
+          fetchPriority="high"
           className="w-full h-full object-cover opacity-60"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />

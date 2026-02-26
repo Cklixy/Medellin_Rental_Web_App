@@ -406,7 +406,7 @@ export default function AdminDashboardPage() {
                     {stats.topCars!.map(({ car, count }, i) => (
                       <div key={car?.id ?? i} className="flex items-center gap-4">
                         <div className="w-8 h-8 rounded-lg bg-red-600/20 flex items-center justify-center text-red-500 font-bold text-sm">{i + 1}</div>
-                        {car?.image && <img src={car.image} alt={car.name} className="w-12 h-8 object-cover rounded-lg" />}
+                        {car?.image && <img src={car.image} alt={car.name} loading="lazy" className="w-12 h-8 object-cover rounded-lg" />}
                         <div className="flex-1">
                           <div className="text-white text-sm">{car?.name}</div>
                           <div className="text-white/50 text-xs">{car?.category}</div>
@@ -469,7 +469,7 @@ export default function AdminDashboardPage() {
                 {filteredCars.map(car => (
                   <div key={car.id} className="glass rounded-2xl overflow-hidden group">
                     <div className="relative h-40">
-                      <img src={car.image} alt={car.name} className="w-full h-full object-cover" />
+                      <img src={car.image} alt={car.name} loading="lazy" className="w-full h-full object-cover" />
                       <button
                         onClick={() => { if (confirm('¿Eliminar este vehículo?')) deleteCar(car.id); }}
                         className="absolute top-2 right-2 w-8 h-8 rounded-lg bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all"
@@ -515,7 +515,7 @@ export default function AdminDashboardPage() {
                       className="w-full flex items-center gap-4 p-4 text-left hover:bg-white/3 transition-colors"
                       onClick={() => setExpandedRes(expanded ? null : reservation.id)}
                     >
-                      {car?.image && <img src={car.image} alt={car.name} className="w-14 h-10 object-cover rounded-lg shrink-0" />}
+                      {car?.image && <img src={car.image} alt={car.name} loading="lazy" className="w-14 h-10 object-cover rounded-lg shrink-0" />}
                       <div className="flex-1 min-w-0">
                         <div className="text-white font-medium text-sm truncate">{reservation.customerName}</div>
                         <div className="text-white/50 text-xs">{car?.name ?? 'N/A'}</div>

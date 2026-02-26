@@ -38,7 +38,7 @@ export default function CarDetailModal({ car, isOpen, onClose, onReserve }: CarD
 
         {/* Hero Image */}
         <div className="relative h-52 sm:h-72 overflow-hidden rounded-t-3xl">
-          <img src={car.image} alt={car.name} className="w-full h-full object-cover" />
+          <img src={car.image} alt={car.name} loading="lazy" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
 
           {/* Badges */}

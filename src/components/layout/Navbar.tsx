@@ -58,7 +58,7 @@ export function Navbar() {
             <button
                 onClick={() => setMobileOpen(prev => !prev)}
                 className="md:hidden fixed top-5 left-4 z-[60] w-10 h-10 rounded-xl glass flex items-center justify-center transition-colors hover:bg-white/10"
-                aria-label="Toggle menu"
+                aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
             >
                 {mobileOpen
                     ? <X className="w-5 h-5 text-white" />
