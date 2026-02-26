@@ -1,8 +1,10 @@
 import { Pool } from 'pg';
 
+const connString = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
+
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.DATABASE_URL?.includes('sslmode=require') || process.env.NODE_ENV === 'production'
+    connectionString: connString,
+    ssl: connString?.includes('sslmode=require') || process.env.NODE_ENV === 'production'
         ? { rejectUnauthorized: false }
         : false,
 });
