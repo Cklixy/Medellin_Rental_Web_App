@@ -3,6 +3,7 @@ import { useReservationsContext } from '@/contexts/ReservationsContext';
 import type { Car } from '@/types';
 import ReservationModal from '@/components/modals/ReservationModal';
 import AuthModal from '@/components/modals/AuthModal';
+import ChatWidget from '@/components/chat/ChatWidget';
 
 export function GlobalModals() {
     const [showAuth, setShowAuth] = useState(false);
@@ -61,6 +62,8 @@ export function GlobalModals() {
                 isOpen={showAuth}
                 onClose={() => setShowAuth(false)}
             />
+
+            <ChatWidget />
         </>
     );
 }

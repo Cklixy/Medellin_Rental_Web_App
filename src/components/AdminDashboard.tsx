@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { 
   X, Users, Car, Calendar, DollarSign, TrendingUp, 
   Trash2, Check, XCircle, Clock, Search,
-  LogOut, BarChart3, Plus, MessageSquare, Send
+  LogOut, BarChart3, Plus, MessageSquare, MessageCircle, Send
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useReservations';
 import { api } from '@/services/api';
 import { toast } from 'sonner';
 import type { Reservation, Quote, Car as CarType } from '@/types';
+import AdminChatTab from '@/components/chat/AdminChatTab';
 
 interface AdminDashboardProps {
   isOpen: boolean;
@@ -27,7 +28,7 @@ const AdminDashboard = ({ isOpen, onClose }: AdminDashboardProps) => {
     updateReservationStatus,
   } = useAdmin();
   
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'cars' | 'reservations' | 'users' | 'quotes'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'cars' | 'reservations' | 'users' | 'quotes' | 'chat'>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Add Car
@@ -196,6 +197,7 @@ const AdminDashboard = ({ isOpen, onClose }: AdminDashboardProps) => {
             { id: 'reservations', label: 'Reservas', icon: Calendar },
             { id: 'users', label: 'Clientes', icon: Users },
             { id: 'quotes', label: 'Cotizaciones', icon: MessageSquare },
+            { id: 'chat', label: 'Chat', icon: MessageCircle },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -528,6 +530,7 @@ const AdminDashboard = ({ isOpen, onClose }: AdminDashboardProps) => {
               )}
             </div>
           )}
+          {activeTab === 'chat' && <AdminChatTab />}
         </div>
       </div>
 

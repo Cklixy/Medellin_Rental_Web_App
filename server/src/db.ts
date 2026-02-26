@@ -86,6 +86,23 @@ export async function initializeSchema() {
                 status TEXT DEFAULT 'new',
                 "createdAt" TIMESTAMP DEFAULT NOW()
             );
+
+            CREATE TABLE IF NOT EXISTS conversations (
+                id SERIAL PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                status TEXT DEFAULT 'open',
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW()
+            );
+
+            CREATE TABLE IF NOT EXISTS messages (
+                id SERIAL PRIMARY KEY,
+                conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+                sender_id TEXT NOT NULL,
+                sender_role TEXT NOT NULL,
+                content TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW()
+            );
         `);
     } finally {
         client.release();
