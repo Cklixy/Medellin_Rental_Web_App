@@ -1,12 +1,14 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ReservationsProvider } from './contexts/ReservationsContext';
+import { Toaster } from 'sonner';
 
 // Pages
 import LandingPage from './pages/LandingPage';
 import FleetPage from './pages/FleetPage';
 import UserDashboardPage from './pages/UserDashboardPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
+import NotFoundPage from './pages/NotFoundPage';
 
 // Layout & Routing
 import { Navbar } from './components/layout/Navbar';
@@ -21,6 +23,7 @@ function App() {
         <div className="min-h-screen bg-black">
           <Navbar />
           <GlobalModals />
+          <Toaster position="top-right" richColors theme="dark" />
 
           <Routes>
             {/* Rutas Públicas */}
@@ -36,6 +39,9 @@ function App() {
             <Route element={<AdminRoute />}>
               <Route path="/admin" element={<AdminDashboardPage />} />
             </Route>
+
+            {/* 404 */}
+            <Route path="*" element={<NotFoundPage />} />
 
           </Routes>
         </div>

@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { X, Calendar, Car, DollarSign, MapPin, Phone, Mail, User, LogOut, Check, Clock, XCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { db, type Reservation } from '@/types';
+import { useReservationsContext } from '@/contexts/ReservationsContext';
+import { toast } from 'sonner';
+import type { Reservation } from '@/types';
 
 interface UserDashboardProps {
   isOpen: boolean;
@@ -10,12 +12,10 @@ interface UserDashboardProps {
 
 const UserDashboard = ({ isOpen, onClose }: UserDashboardProps) => {
   const { user, logout } = useAuth();
+  const { cars, reservations, cancelReservation } = useReservationsContext();
   const [activeTab, setActiveTab] = useState<'reservations' | 'profile'>('reservations');
-  
-  if (!isOpen || !user) return null;
 
-  const reservations = db.getReservationsByUser(user.id);
-  const cars = db.getCars();
+  if (!isOpen || !user) return null;
 
   const getCarById = (carId: number) => cars.find(c => c.id === carId);
 
@@ -57,6 +57,12 @@ const UserDashboard = ({ isOpen, onClose }: UserDashboardProps) => {
   const handleLogout = () => {
     logout();
     onClose();
+  };
+
+  const handleCancel = async (reservationId: string) => {
+    if (!confirm('¿Estás seguro de que deseas cancelar esta reserva?')) return;
+    await cancelReservation(reservationId);
+    toast.success('Reserva cancelada correctamente');
   };
 
   return (
@@ -187,14 +193,20 @@ const UserDashboard = ({ isOpen, onClose }: UserDashboardProps) => {
                         </div>
                       )}
 
+                      {reservation.adminMessage && (
+                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2 text-blue-300 text-xs mb-3">
+                          Mensaje del admin: {reservation.adminMessage}
+                        </div>
+                      )}
+
+                      {reservation.tourName && (
+                        <div className="text-white/50 text-xs mb-3">🗺️ Tour: {reservation.tourName}</div>
+                      )}
+
                       {reservation.status === 'pending' && (
                         <button
-                          onClick={() => {
-                            reservation.status = 'cancelled';
-                            db.saveReservation(reservation);
-                            window.location.reload();
-                          }}
-                          className="text-red-500 text-sm hover:text-red-400"
+                          onClick={() => handleCancel(reservation.id)}
+                          className="text-red-500 text-sm hover:text-red-400 transition-colors"
                         >
                           Cancelar reserva
                         </button>

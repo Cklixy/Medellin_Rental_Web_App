@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Calendar, Car, DollarSign, MapPin, Phone, Mail, User, LogOut, Check, Clock, XCircle, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useReservationsContext } from '@/contexts/ReservationsContext';
-import { type Reservation, type Car as DbCar } from '@/types';
+import { type Reservation } from '@/types';
 
 const UserDashboardPage = () => {
   const { user, logout } = useAuth();

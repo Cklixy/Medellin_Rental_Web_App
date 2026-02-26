@@ -91,13 +91,13 @@ function Stepper({ label, value, min, max, onChange }: {
 }
 
 const FUEL_OPTIONS        = ['Gasolina', 'Diesel', 'Eléctrico', 'Híbrido'];
-const TRANSMISSION_OPTIONS = ['Automático', 'Manual'];
+const TRANSMISSION_OPTIONS = ['Automática', 'Manual'];
 
 interface AddCarFormProps { onAdd: (car: Omit<CarType, 'id'>) => Promise<void>; onCancel: () => void }
 function AddCarForm({ onAdd, onCancel }: AddCarFormProps) {
   const [form, setForm] = useState({
     name: '', category: CAR_CATEGORIES[0], image: '', price: '', seats: 5, doors: 4,
-    transmission: 'Automático', fuel: 'Gasolina', year: new Date().getFullYear(),
+    transmission: 'Automática', fuel: 'Gasolina', year: new Date().getFullYear(),
     features: '', description: '', available: true,
   });
   const [saving, setSaving] = useState(false);
@@ -110,7 +110,7 @@ function AddCarForm({ onAdd, onCancel }: AddCarFormProps) {
     await onAdd({
       name: form.name, category: form.category, image: form.image,
       price: Number(form.price), seats: form.seats, doors: form.doors,
-      transmission: form.transmission, fuel: form.fuel, year: form.year,
+      transmission: form.transmission as 'Automática' | 'Manual', fuel: form.fuel, year: form.year,
       features: form.features.split(',').map(s => s.trim()).filter(Boolean),
       description: form.description, available: form.available,
     });
@@ -248,7 +248,7 @@ export default function AdminDashboardPage() {
   const [tab, setTab]             = useState<'dashboard' | 'cars' | 'reservations' | 'users' | 'quotes'>('dashboard');
   const [carSearch, setCarSearch]   = useState('');
   const [showAddCar, setShowAddCar] = useState(false);
-  const [expandedRes, setExpandedRes] = useState<number | null>(null);
+  const [expandedRes, setExpandedRes] = useState<string | null>(null);
   const [actionModal, setActionModal] = useState<{
     reservation: Reservation;
     action: 'confirmed' | 'cancelled' | 'completed';

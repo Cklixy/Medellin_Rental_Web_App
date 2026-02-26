@@ -1,6 +1,6 @@
 import type { Car, Reservation, User, Quote } from '@/types';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const getHeaders = () => {
     const token = localStorage.getItem('crm_token');
@@ -34,6 +34,16 @@ export const api = {
             headers: getHeaders()
         });
         if (!resp.ok) throw new Error('Error deleting car');
+    },
+
+    updateCar: async (id: number, car: Partial<Omit<Car, 'id'>>): Promise<Car> => {
+        const resp = await fetch(`${API_URL}/cars/${id}`, {
+            method: 'PATCH',
+            headers: getHeaders(),
+            body: JSON.stringify(car)
+        });
+        if (!resp.ok) throw new Error('Error updating car');
+        return resp.json();
     },
 
     // Users

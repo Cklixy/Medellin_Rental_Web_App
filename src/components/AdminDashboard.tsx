@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   X, Users, Car, Calendar, DollarSign, TrendingUp, 
   Trash2, Check, XCircle, Clock, Search,
-  LogOut, BarChart3
+  LogOut, BarChart3, Plus, MessageSquare, Send
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useReservations';
-import type { Reservation } from '@/types';
+import { api } from '@/services/api';
+import { toast } from 'sonner';
+import type { Reservation, Quote, Car as CarType } from '@/types';
 
 interface AdminDashboardProps {
   isOpen: boolean;
@@ -20,17 +22,34 @@ const AdminDashboard = ({ isOpen, onClose }: AdminDashboardProps) => {
     allReservations, 
     allUsers, 
     stats, 
-    // addCar, 
-    // updateCar, 
+    addCar,
     deleteCar,
     updateReservationStatus,
-    // refreshData
   } = useAdmin();
   
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'cars' | 'reservations' | 'users'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'cars' | 'reservations' | 'users' | 'quotes'>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
-  // const [showAddCar, setShowAddCar] = useState(false);
-  // const [editingCar, setEditingCar] = useState<CarType | null>(null);
+
+  // Add Car
+  const [showAddCar, setShowAddCar] = useState(false);
+  const [addCarLoading, setAddCarLoading] = useState(false);
+  const [addCarForm, setAddCarForm] = useState<Omit<CarType, 'id'>>({
+    name: '', category: '', image: '', price: 0, seats: 5, doors: 4,
+    transmission: 'Automática', fuel: 'Gasolina', features: [],
+    description: '', year: new Date().getFullYear(), available: true,
+  });
+
+  // Admin message modal for reservation status
+  const [adminAction, setAdminAction] = useState<{ id: string; status: Reservation['status'] } | null>(null);
+  const [adminMessage, setAdminMessage] = useState('');
+
+  // Quotes
+  const [quotes, setQuotes] = useState<Quote[]>([]);
+  useEffect(() => {
+    api.getQuotes()
+      .then(setQuotes)
+      .catch(e => console.error('Error fetching quotes', e));
+  }, []);
 
   if (!isOpen) return null;
 
@@ -45,6 +64,68 @@ const AdminDashboard = ({ isOpen, onClose }: AdminDashboardProps) => {
   const handleLogout = () => {
     logout();
     onClose();
+  };
+
+  const handleDeleteCar = async (id: number) => {
+    if (!confirm('¿Eliminar este vehículo?')) return;
+    try {
+      await deleteCar(id);
+      toast.success('Vehículo eliminado correctamente');
+    } catch {
+      toast.error('Error al eliminar el vehículo');
+    }
+  };
+
+  const handleAddCar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddCarLoading(true);
+    try {
+      await addCar(addCarForm);
+      toast.success('Vehículo agregado correctamente');
+      setShowAddCar(false);
+      setAddCarForm({ name: '', category: '', image: '', price: 0, seats: 5, doors: 4, transmission: 'Automática', fuel: 'Gasolina', features: [], description: '', year: new Date().getFullYear(), available: true });
+    } catch {
+      toast.error('Error al agregar el vehículo');
+    } finally {
+      setAddCarLoading(false);
+    }
+  };
+
+  const openAdminAction = (id: string, status: Reservation['status']) => {
+    setAdminAction({ id, status });
+    setAdminMessage('');
+  };
+
+  const confirmAdminAction = async () => {
+    if (!adminAction) return;
+    try {
+      await updateReservationStatus(adminAction.id, adminAction.status, adminMessage);
+      toast.success('Reserva actualizada correctamente');
+      setAdminAction(null);
+    } catch {
+      toast.error('Error al actualizar la reserva');
+    }
+  };
+
+  const handleDeleteQuote = async (id: number) => {
+    if (!confirm('¿Eliminar esta cotización?')) return;
+    try {
+      await api.deleteQuote(id);
+      setQuotes(prev => prev.filter(q => q.id !== id));
+      toast.success('Cotización eliminada');
+    } catch {
+      toast.error('Error al eliminar la cotización');
+    }
+  };
+
+  const handleMarkAttended = async (id: number) => {
+    try {
+      const updated = await api.updateQuoteStatus(id, 'attended');
+      setQuotes(prev => prev.map(q => q.id === id ? updated : q));
+      toast.success('Cotización marcada como atendida');
+    } catch {
+      toast.error('Error al actualizar cotización');
+    }
   };
 
   const getStatusIcon = (status: Reservation['status']) => {
@@ -114,6 +195,7 @@ const AdminDashboard = ({ isOpen, onClose }: AdminDashboardProps) => {
             { id: 'cars', label: 'Vehículos', icon: Car },
             { id: 'reservations', label: 'Reservas', icon: Calendar },
             { id: 'users', label: 'Clientes', icon: Users },
+            { id: 'quotes', label: 'Cotizaciones', icon: MessageSquare },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -234,13 +316,13 @@ const AdminDashboard = ({ isOpen, onClose }: AdminDashboardProps) => {
                     className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-red-500/50 transition-colors"
                   />
                 </div>
-                {/* <button
+                <button
                   onClick={() => setShowAddCar(true)}
-                  className="btn-primary flex items-center gap-2 ml-4"
+                  className="ml-4 flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-colors text-sm"
                 >
-                  <Plus className="w-5 h-5" />
+                  <Plus className="w-4 h-4" />
                   Agregar Vehículo
-                </button> */}
+                </button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -253,18 +335,8 @@ const AdminDashboard = ({ isOpen, onClose }: AdminDashboardProps) => {
                         className="w-full h-full object-cover"
                       />
                       <div className="absolute top-2 right-2 flex gap-1">
-                        {/* <button
-                          onClick={() => setEditingCar(car)}
-                          className="w-8 h-8 rounded-lg bg-black/50 flex items-center justify-center hover:bg-red-600 transition-colors"
-                        >
-                          <Edit className="w-4 h-4 text-white" />
-                        </button> */}
                         <button
-                          onClick={() => {
-                            if (confirm('¿Eliminar este vehículo?')) {
-                              deleteCar(car.id);
-                            }
-                          }}
+                          onClick={() => handleDeleteCar(car.id)}
                           className="w-8 h-8 rounded-lg bg-black/50 flex items-center justify-center hover:bg-red-600 transition-colors"
                         >
                           <Trash2 className="w-4 h-4 text-white" />
@@ -332,13 +404,15 @@ const AdminDashboard = ({ isOpen, onClose }: AdminDashboardProps) => {
                               {reservation.status === 'pending' && (
                                 <>
                                   <button
-                                    onClick={() => updateReservationStatus(reservation.id, 'confirmed')}
+                                    onClick={() => openAdminAction(reservation.id, 'confirmed')}
+                                    title="Confirmar"
                                     className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center hover:bg-green-500/30"
                                   >
                                     <Check className="w-4 h-4 text-green-500" />
                                   </button>
                                   <button
-                                    onClick={() => updateReservationStatus(reservation.id, 'cancelled')}
+                                    onClick={() => openAdminAction(reservation.id, 'cancelled')}
+                                    title="Cancelar"
                                     className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center hover:bg-red-500/30"
                                   >
                                     <XCircle className="w-4 h-4 text-red-500" />
@@ -347,7 +421,8 @@ const AdminDashboard = ({ isOpen, onClose }: AdminDashboardProps) => {
                               )}
                               {reservation.status === 'confirmed' && (
                                 <button
-                                  onClick={() => updateReservationStatus(reservation.id, 'completed')}
+                                  onClick={() => openAdminAction(reservation.id, 'completed')}
+                                  title="Completar"
                                   className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center hover:bg-blue-500/30"
                                 >
                                   <Check className="w-4 h-4 text-blue-500" />
@@ -399,8 +474,183 @@ const AdminDashboard = ({ isOpen, onClose }: AdminDashboardProps) => {
               </div>
             </div>
           )}
+
+          {activeTab === 'quotes' && (
+            <div className="space-y-4">
+              {quotes.length === 0 ? (
+                <div className="text-center py-12">
+                  <MessageSquare className="w-16 h-16 text-white/20 mx-auto mb-4" />
+                  <p className="text-white/50">No hay cotizaciones aún</p>
+                </div>
+              ) : (
+                quotes.map((quote) => (
+                  <div key={quote.id} className="glass rounded-2xl p-5">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-white font-semibold">{quote.name}</span>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                            quote.status === 'new'
+                              ? 'bg-yellow-500/20 text-yellow-400'
+                              : 'bg-green-500/20 text-green-400'
+                          }`}>
+                            {quote.status === 'new' ? 'Nuevo' : 'Atendido'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-4 text-white/50 text-sm">
+                          <span>{quote.email}</span>
+                          <span>{quote.phone}</span>
+                          <span>{new Date(quote.createdAt).toLocaleDateString('es-CO')}</span>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        {quote.status === 'new' && (
+                          <button
+                            onClick={() => handleMarkAttended(quote.id)}
+                            title="Marcar como atendido"
+                            className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center hover:bg-green-500/30"
+                          >
+                            <Check className="w-4 h-4 text-green-500" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDeleteQuote(quote.id)}
+                          title="Eliminar"
+                          className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center hover:bg-red-500/30"
+                        >
+                          <Trash2 className="w-4 h-4 text-red-500" />
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-white/70 text-sm bg-white/5 rounded-lg p-3">{quote.message}</p>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Add Car Modal */}
+      {showAddCar && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/80" onClick={() => setShowAddCar(false)} />
+          <div className="relative w-full max-w-lg glass-card rounded-3xl p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-white font-semibold text-lg">Agregar Vehículo</h3>
+              <button onClick={() => setShowAddCar(false)} className="w-8 h-8 rounded-xl glass flex items-center justify-center hover:bg-white/10">
+                <X className="w-4 h-4 text-white" />
+              </button>
+            </div>
+            <form onSubmit={handleAddCar} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-white/50 text-xs mb-1">Nombre</label>
+                  <input required value={addCarForm.name} onChange={e => setAddCarForm(p => ({ ...p, name: e.target.value }))}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-red-500/50" />
+                </div>
+                <div>
+                  <label className="block text-white/50 text-xs mb-1">Categoría</label>
+                  <input required value={addCarForm.category} onChange={e => setAddCarForm(p => ({ ...p, category: e.target.value }))}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-red-500/50" />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-white/50 text-xs mb-1">URL de Imagen</label>
+                  <input required value={addCarForm.image} onChange={e => setAddCarForm(p => ({ ...p, image: e.target.value }))}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-red-500/50" />
+                </div>
+                <div>
+                  <label className="block text-white/50 text-xs mb-1">Precio/día (COP)</label>
+                  <input required type="number" value={addCarForm.price} onChange={e => setAddCarForm(p => ({ ...p, price: Number(e.target.value) }))}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-red-500/50" />
+                </div>
+                <div>
+                  <label className="block text-white/50 text-xs mb-1">Año</label>
+                  <input required type="number" value={addCarForm.year} onChange={e => setAddCarForm(p => ({ ...p, year: Number(e.target.value) }))}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-red-500/50" />
+                </div>
+                <div>
+                  <label className="block text-white/50 text-xs mb-1">Asientos</label>
+                  <input required type="number" value={addCarForm.seats} onChange={e => setAddCarForm(p => ({ ...p, seats: Number(e.target.value) }))}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-red-500/50" />
+                </div>
+                <div>
+                  <label className="block text-white/50 text-xs mb-1">Puertas</label>
+                  <input required type="number" value={addCarForm.doors} onChange={e => setAddCarForm(p => ({ ...p, doors: Number(e.target.value) }))}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-red-500/50" />
+                </div>
+                <div>
+                  <label className="block text-white/50 text-xs mb-1">Transmisión</label>
+                  <select value={addCarForm.transmission} onChange={e => setAddCarForm(p => ({ ...p, transmission: e.target.value as any }))}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-red-500/50">
+                    <option value="Automática">Automática</option>
+                    <option value="Manual">Manual</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-white/50 text-xs mb-1">Combustible</label>
+                  <input value={addCarForm.fuel} onChange={e => setAddCarForm(p => ({ ...p, fuel: e.target.value }))}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-red-500/50" />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-white/50 text-xs mb-1">Descripción</label>
+                  <textarea value={addCarForm.description} onChange={e => setAddCarForm(p => ({ ...p, description: e.target.value }))}
+                    rows={2} className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-red-500/50 resize-none" />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-white/50 text-xs mb-1">Características (separadas por coma)</label>
+                  <input
+                    value={addCarForm.features.join(', ')}
+                    onChange={e => setAddCarForm(p => ({ ...p, features: e.target.value.split(',').map(f => f.trim()).filter(Boolean) }))}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-red-500/50"
+                  />
+                </div>
+                <div className="col-span-2 flex items-center gap-2">
+                  <input type="checkbox" id="available" checked={addCarForm.available} onChange={e => setAddCarForm(p => ({ ...p, available: e.target.checked }))}
+                    className="accent-red-500" />
+                  <label htmlFor="available" className="text-white/70 text-sm">Disponible</label>
+                </div>
+              </div>
+              <button type="submit" disabled={addCarLoading}
+                className="w-full py-3 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
+                {addCarLoading ? 'Guardando...' : <><Plus className="w-4 h-4" /> Agregar Vehículo</>}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Admin Message Modal */}
+      {adminAction && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/80" onClick={() => setAdminAction(null)} />
+          <div className="relative w-full max-w-md glass-card rounded-3xl p-6">
+            <h3 className="text-white font-semibold text-lg mb-2">
+              {adminAction.status === 'confirmed' ? 'Confirmar Reserva' :
+               adminAction.status === 'cancelled' ? 'Cancelar Reserva' : 'Completar Reserva'}
+            </h3>
+            <p className="text-white/50 text-sm mb-4">Puedes agregar un mensaje opcional para el cliente.</p>
+            <textarea
+              value={adminMessage}
+              onChange={e => setAdminMessage(e.target.value)}
+              placeholder="Mensaje para el cliente (opcional)..."
+              rows={3}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-red-500/50 resize-none mb-4"
+            />
+            <div className="flex gap-3">
+              <button onClick={() => setAdminAction(null)}
+                className="flex-1 py-2 rounded-xl glass text-white/70 hover:text-white transition-colors text-sm">
+                Cancelar
+              </button>
+              <button onClick={confirmAdminAction}
+                className="flex-1 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold transition-colors text-sm flex items-center justify-center gap-2">
+                <Send className="w-4 h-4" /> Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

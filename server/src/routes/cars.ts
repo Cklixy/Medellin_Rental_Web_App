@@ -66,4 +66,42 @@ router.delete('/:id', requireAdmin, async (req: any, res) => {
     }
 });
 
+// Update car (Admin)
+router.patch('/:id', requireAdmin, async (req: any, res) => {
+    try {
+        const db = await getDb();
+        const { name, category, image, price, seats, doors, transmission, fuel, features, description, year, available } = req.body;
+        await db.run(
+            `UPDATE cars SET
+              name = COALESCE(?, name),
+              category = COALESCE(?, category),
+              image = COALESCE(?, image),
+              price = COALESCE(?, price),
+              seats = COALESCE(?, seats),
+              doors = COALESCE(?, doors),
+              transmission = COALESCE(?, transmission),
+              fuel = COALESCE(?, fuel),
+              features = COALESCE(?, features),
+              description = COALESCE(?, description),
+              year = COALESCE(?, year),
+              available = COALESCE(?, available)
+            WHERE id = ?`,
+            [
+                name ?? null, category ?? null, image ?? null, price ?? null,
+                seats ?? null, doors ?? null, transmission ?? null, fuel ?? null,
+                features ? JSON.stringify(features) : null,
+                description ?? null, year ?? null,
+                available !== undefined ? (available ? 1 : 0) : null,
+                req.params.id
+            ]
+        );
+        const updated = await db.get('SELECT * FROM cars WHERE id = ?', [req.params.id]);
+        res.json({ ...updated, features: JSON.parse(updated.features), available: updated.available === 1 });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error al actualizar vehiculo' });
+    }
+});
+
+
 export default router;
