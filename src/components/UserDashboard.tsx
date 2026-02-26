@@ -266,7 +266,7 @@ const UserDashboard = ({ isOpen, onClose }: UserDashboardProps) => {
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-red-500">
-                      {formatPrice(reservations.reduce((sum, r) => sum + r.totalPrice, 0))}
+                      {formatPrice(reservations.filter(r => r.status !== 'cancelled').reduce((sum, r) => sum + r.totalPrice, 0))}
                     </div>
                     <div className="text-white/50 text-xs">Total Gastado</div>
                   </div>

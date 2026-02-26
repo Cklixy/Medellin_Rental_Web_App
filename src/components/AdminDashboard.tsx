@@ -190,7 +190,7 @@ const AdminDashboard = ({ isOpen, onClose }: AdminDashboardProps) => {
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-white/10 bg-black/30">
+        <div className="flex border-b border-white/10 bg-black/30 overflow-x-auto">
           {[
             { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
             { id: 'cars', label: 'Vehículos', icon: Car },

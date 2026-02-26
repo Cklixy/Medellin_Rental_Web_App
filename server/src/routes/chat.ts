@@ -91,6 +91,50 @@ router.get('/conversations/:id/messages', requireAdmin, async (req, res) => {
     }
 });
 
+// POST /api/chat/messages — send a message (user or admin); broadcasts via Socket.io
+router.post('/messages', requireAuth, async (req: any, res) => {
+    try {
+        const { conversationId, content } = req.body;
+        if (!conversationId || !content?.trim()) {
+            return res.status(400).json({ error: 'conversationId and content required' });
+        }
+        const db = await getDb();
+
+        // Security: non-admins can only message their own conversation
+        if (req.user.role !== 'admin') {
+            const conv = (await db.query(
+                `SELECT id FROM conversations WHERE id = $1 AND user_id = $2`,
+                [conversationId, req.user.id]
+            )).rows[0];
+            if (!conv) return res.status(403).json({ error: 'Forbidden' });
+        }
+
+        const result = await db.query(
+            `INSERT INTO messages (conversation_id, sender_id, sender_role, content)
+             VALUES ($1, $2, $3, $4) RETURNING *`,
+            [conversationId, req.user.id, req.user.role, content.trim()]
+        );
+        const message = result.rows[0];
+
+        await db.query(
+            `UPDATE conversations SET updated_at = NOW() WHERE id = $1`,
+            [conversationId]
+        );
+
+        // Broadcast via Socket.io (imported lazily to avoid circular dep)
+        try {
+            const { io } = await import('../index');
+            io.to(`conv_${conversationId}`).emit('new_message', message);
+            io.to('admin_room').emit('new_message', message);
+        } catch { /* socket broadcast is best-effort */ }
+
+        res.json(message);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error sending message' });
+    }
+});
+
 // PATCH /api/chat/conversations/:id/close — admin: close conversation
 router.patch('/conversations/:id/close', requireAdmin, async (req, res) => {
     try {

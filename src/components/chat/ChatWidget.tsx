@@ -98,19 +98,30 @@ export default function ChatWidget() {
     if (isOpen) setUnread(0);
   }, [isOpen]);
 
-  const sendMessage = () => {
-    if (!input.trim() || !conversation || !socketRef.current) return;
-    socketRef.current.emit('send_message', {
-      conversationId: conversation.id,
-      content: input.trim(),
-    });
+  const sendMessage = async () => {
+    if (!input.trim() || !conversation || !token) return;
+    const text = input.trim();
     setInput('');
+    try {
+      const res = await fetch(`${API_URL}/chat/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ conversationId: conversation.id, content: text }),
+      });
+      if (!res.ok) throw new Error('send failed');
+      const msg: Message = await res.json();
+      // Add immediately (socket may also deliver it — dedup handles it)
+      setMessages(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, msg]);
+    } catch (e) {
+      console.error('Error sending message', e);
+      setInput(text); // restore input on error
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      void sendMessage();
     }
   };
 
@@ -192,7 +203,7 @@ export default function ChatWidget() {
               className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-red-500/50"
             />
             <button
-              onClick={sendMessage}
+              onClick={() => void sendMessage()}
               disabled={!input.trim()}
               className="w-9 h-9 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-40 flex items-center justify-center transition-colors"
             >

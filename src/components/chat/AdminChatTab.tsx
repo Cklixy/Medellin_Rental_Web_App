@@ -110,19 +110,34 @@ export default function AdminChatTab() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const sendMessage = () => {
-    if (!input.trim() || !selectedConv || !socketRef.current) return;
-    socketRef.current.emit('send_message', {
-      conversationId: selectedConv.id,
-      content: input.trim(),
-    });
+  const sendMessage = async () => {
+    if (!input.trim() || !selectedConv || !token) return;
+    const text = input.trim();
     setInput('');
+    try {
+      const res = await fetch(`${API_URL}/chat/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ conversationId: selectedConv.id, content: text }),
+      });
+      if (!res.ok) throw new Error('send failed');
+      const msg: Message = await res.json();
+      setMessages(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, msg]);
+      setConversations(prev => prev.map(c =>
+        c.id === msg.conversation_id
+          ? { ...c, last_message: msg.content, updated_at: msg.created_at }
+          : c
+      ).sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()));
+    } catch (e) {
+      console.error('Error sending message', e);
+      setInput(text);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      void sendMessage();
     }
   };
 
@@ -243,7 +258,7 @@ export default function AdminChatTab() {
                   className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-red-500/50"
                 />
                 <button
-                  onClick={sendMessage}
+                  onClick={() => void sendMessage()}
                   disabled={!input.trim()}
                   className="w-9 h-9 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-40 flex items-center justify-center transition-colors"
                 >
