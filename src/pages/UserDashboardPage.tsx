@@ -249,7 +249,6 @@ const UserDashboardPage = () => {
                     <div className="text-white/50 text-xs">Total Gastado</div>
                   </div>
                 </div>
-                </div>
               </div>
             </div>
           )}
