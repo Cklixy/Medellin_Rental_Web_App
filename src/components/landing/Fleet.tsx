@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Users, Settings, ChevronRight, Check } from 'lucide-react';
 import type { Car } from '@/types';
+import CarDetailModal from '@/components/modals/CarDetailModal';
 
 interface FleetProps {
   cars: Car[];
@@ -10,6 +11,7 @@ interface FleetProps {
 
 const Fleet = ({ cars, onReserve, onViewAll }: FleetProps) => {
   const [hoveredCar, setHoveredCar] = useState<number | null>(null);
+  const [detailCar, setDetailCar] = useState<Car | null>(null);
 
   // Show only first 4 cars on homepage
   const featuredCars = cars.slice(0, 4);
@@ -50,8 +52,9 @@ const Fleet = ({ cars, onReserve, onViewAll }: FleetProps) => {
           {featuredCars.map((car, index) => (
             <div
               key={car.id}
-              className="group relative glass-card-hover rounded-3xl overflow-hidden transition-all duration-700"
+              className="group relative glass-card-hover rounded-3xl overflow-hidden transition-all duration-700 cursor-pointer"
               style={{ animationDelay: `${index * 150}ms` }}
+              onClick={() => setDetailCar(car)}
               onMouseEnter={() => setHoveredCar(car.id)}
               onMouseLeave={() => setHoveredCar(null)}
             >
@@ -80,7 +83,7 @@ const Fleet = ({ cars, onReserve, onViewAll }: FleetProps) => {
                   hoveredCar === car.id ? 'opacity-100' : 'opacity-0'
                 }`}>
                   <button
-                    onClick={() => onReserve(car)}
+                    onClick={(e) => { e.stopPropagation(); onReserve(car); }}
                     className="btn-primary flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
                   >
                     <span>Reservar Ahora</span>
@@ -120,7 +123,7 @@ const Fleet = ({ cars, onReserve, onViewAll }: FleetProps) => {
 
                 {/* CTA */}
                 <button
-                  onClick={() => onReserve(car)}
+                  onClick={(e) => { e.stopPropagation(); onReserve(car); }}
                   className="w-full btn-primary flex items-center justify-center gap-2"
                 >
                   <span>Reservar</span>
@@ -142,6 +145,13 @@ const Fleet = ({ cars, onReserve, onViewAll }: FleetProps) => {
           </button>
         </div>
       </div>
+
+      <CarDetailModal
+        car={detailCar}
+        isOpen={!!detailCar}
+        onClose={() => setDetailCar(null)}
+        onReserve={(c) => { setDetailCar(null); onReserve(c); }}
+      />
     </section>
   );
 };

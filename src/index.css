@@ -88,11 +88,11 @@
   }
   
   .btn-primary {
-    @apply bg-red-600 text-white px-8 py-4 rounded-lg font-medium transition-all duration-300 hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/25;
+    @apply bg-red-600 text-white px-5 py-3 sm:px-8 sm:py-4 rounded-lg font-medium transition-all duration-300 hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/25;
   }
   
   .btn-outline {
-    @apply border border-white/20 text-white px-8 py-4 rounded-lg font-medium transition-all duration-300 hover:bg-white/10 hover:border-white/40;
+    @apply border border-white/20 text-white px-5 py-3 sm:px-8 sm:py-4 rounded-lg font-medium transition-all duration-300 hover:bg-white/10 hover:border-white/40;
   }
   
   .section-padding {

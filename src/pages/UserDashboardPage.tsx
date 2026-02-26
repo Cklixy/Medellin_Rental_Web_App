@@ -231,7 +231,7 @@ const UserDashboardPage = () => {
 
               <div className="glass rounded-2xl p-6">
                 <h3 className="text-white font-semibold mb-4">Estadísticas</h3>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-white">{reservations.length}</div>
                     <div className="text-white/50 text-xs">Total Reservas</div>
@@ -242,12 +242,13 @@ const UserDashboardPage = () => {
                     </div>
                     <div className="text-white/50 text-xs">Completadas</div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-red-500">
-                      {formatPrice(reservations.reduce((sum, r) => sum + r.totalPrice, 0))}
+                  <div className="col-span-2 sm:col-span-1 text-center">
+                    <div className="text-lg sm:text-2xl font-bold text-red-500">
+                      {formatPrice(reservations.filter(r => r.status !== 'cancelled').reduce((sum, r) => sum + r.totalPrice, 0))}
                     </div>
                     <div className="text-white/50 text-xs">Total Gastado</div>
                   </div>
+                </div>
                 </div>
               </div>
             </div>

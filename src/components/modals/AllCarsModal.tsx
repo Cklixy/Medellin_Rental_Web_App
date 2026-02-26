@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { X, Filter, Search, Users, Fuel, Settings, ChevronRight, Check } from 'lucide-react';
 import type { Car } from '@/types';
+import CarDetailModal from '@/components/modals/CarDetailModal';
 
 interface AllCarsModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ const AllCarsModal = ({ isOpen, onClose, cars, onSelectCar }: AllCarsModalProps)
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [searchQuery, setSearchQuery] = useState('');
   const [priceRange, setPriceRange] = useState<'all' | 'low' | 'medium' | 'high'>('all');
+  const [detailCar, setDetailCar] = useState<Car | null>(null);
 
   const filteredCars = useMemo(() => {
     return cars.filter((car) => {
@@ -134,8 +136,9 @@ const AllCarsModal = ({ isOpen, onClose, cars, onSelectCar }: AllCarsModalProps)
               {filteredCars.map((car, index) => (
                 <div
                   key={car.id}
-                  className="group glass-card-hover rounded-2xl overflow-hidden transition-all duration-500"
+                  className="group glass-card-hover rounded-2xl overflow-hidden transition-all duration-500 cursor-pointer"
                   style={{ animationDelay: `${index * 50}ms` }}
+                  onClick={() => setDetailCar(car)}
                 >
                   {/* Image */}
                   <div className="relative h-48 overflow-hidden">
@@ -200,7 +203,8 @@ const AllCarsModal = ({ isOpen, onClose, cars, onSelectCar }: AllCarsModalProps)
 
                     {/* CTA */}
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         if (car.available) {
                           onSelectCar(car);
                           onClose();
@@ -219,6 +223,16 @@ const AllCarsModal = ({ isOpen, onClose, cars, onSelectCar }: AllCarsModalProps)
           )}
         </div>
       </div>
+
+      <CarDetailModal
+        car={detailCar}
+        isOpen={!!detailCar}
+        onClose={() => setDetailCar(null)}
+        onReserve={(c) => {
+          setDetailCar(null);
+          if (c.available) { onSelectCar(c); onClose(); }
+        }}
+      />
     </div>
   );
 };

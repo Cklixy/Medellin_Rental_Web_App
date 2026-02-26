@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Filter, Search, Users, Settings, ChevronRight, Check, ArrowLeft } from 'lucide-react';
 import { useReservationsContext } from '@/contexts/ReservationsContext';
+import CarDetailModal from '@/components/modals/CarDetailModal';
 import type { Car } from '@/types';
 
 const categories = [
@@ -16,6 +17,7 @@ export default function FleetPage() {
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [searchQuery, setSearchQuery] = useState('');
   const [priceRange, setPriceRange] = useState<'all' | 'low' | 'medium' | 'high'>('all');
+  const [detailCar, setDetailCar] = useState<Car | null>(null);
 
   const filteredCars = useMemo(() => {
     return cars.filter((car: Car) => {
@@ -138,8 +140,9 @@ export default function FleetPage() {
             {filteredCars.map((car: Car, index: number) => (
               <div
                 key={car.id}
-                className="group glass-card-hover rounded-2xl overflow-hidden transition-all duration-500"
+                className="group glass-card-hover rounded-2xl overflow-hidden transition-all duration-500 cursor-pointer"
                 style={{ animationDelay: `${index * 40}ms` }}
+                onClick={() => setDetailCar(car)}
               >
                 {/* Image */}
                 <div className="relative h-48 overflow-hidden">
@@ -192,7 +195,7 @@ export default function FleetPage() {
                   </div>
 
                   <button
-                    onClick={() => car.available && openReservationModal(car)}
+                    onClick={(e) => { e.stopPropagation(); if (car.available) openReservationModal(car); }}
                     disabled={!car.available}
                     className="w-full btn-primary flex items-center justify-center gap-2 text-sm py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -205,6 +208,13 @@ export default function FleetPage() {
           </div>
         )}
       </div>
+
+      <CarDetailModal
+        car={detailCar}
+        isOpen={!!detailCar}
+        onClose={() => setDetailCar(null)}
+        onReserve={(c) => { openReservationModal(c); setDetailCar(null); }}
+      />
     </div>
   );
 }

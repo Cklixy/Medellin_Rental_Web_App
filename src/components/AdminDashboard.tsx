@@ -260,7 +260,7 @@ const AdminDashboard = ({ isOpen, onClose }: AdminDashboardProps) => {
               </div>
 
               {/* Status Cards */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 <div className="glass rounded-2xl p-4 border border-yellow-500/20">
                   <div className="text-yellow-500 text-sm mb-1">Pendientes</div>
                   <div className="text-2xl font-bold text-white">{stats.pendingReservations}</div>
