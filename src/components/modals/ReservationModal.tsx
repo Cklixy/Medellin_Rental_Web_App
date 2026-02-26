@@ -38,6 +38,12 @@ function getValidTourDates(pickupDate: string, returnDate: string, dayOfWeek: nu
 
 const DAY_NAMES: Record<number, string> = { 0:'domingo',1:'lunes',2:'martes',3:'miércoles',4:'jueves',5:'viernes',6:'sábado' };
 
+// Parse ISO date as LOCAL time (avoids UTC timezone-shift showing day before)
+function parseLocalDate(iso: string): Date {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
 interface ReservationModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -71,6 +77,7 @@ const ReservationModal = ({ isOpen, onClose, onOpenAuth, initialTourName, car, o
     pickupDate: '',
     returnDate: '',
     pickupLocation: 'Aeropuerto José María Córdova',
+    customPickupAddress: '',
     withDriver: false,
     additionalNotes: '',
     tourName: initialTourName ?? '',
@@ -89,6 +96,7 @@ const ReservationModal = ({ isOpen, onClose, onOpenAuth, initialTourName, car, o
         pickupDate: '',
         returnDate: '',
         pickupLocation: 'Aeropuerto José María Córdova',
+        customPickupAddress: '',
         withDriver: false,
         additionalNotes: '',
         tourName: initialTourName ?? '',
@@ -105,21 +113,26 @@ const ReservationModal = ({ isOpen, onClose, onOpenAuth, initialTourName, car, o
   const tourPrice = selectedTourObj?.price ?? 0;
   const totalPrice = calculateTotalPrice(car, formData.pickupDate, formData.returnDate, formData.withDriver) + tourPrice;
   const days = formData.pickupDate && formData.returnDate 
-    ? Math.max(1, Math.ceil((new Date(formData.returnDate).getTime() - new Date(formData.pickupDate).getTime()) / (1000 * 60 * 60 * 24)))
+    ? Math.max(1, Math.ceil((parseLocalDate(formData.returnDate).getTime() - parseLocalDate(formData.pickupDate).getTime()) / (1000 * 60 * 60 * 24)))
     : 0;
 
   const handleSubmit = () => {
     const id = `RES-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
     setReservationId(id);
+    const { customPickupAddress: _, ...restFormData } = formData;
     onSubmit({
       car,
-      ...formData,
+      ...restFormData,
+      pickupLocation: formData.pickupLocation === 'otro'
+        ? formData.customPickupAddress
+        : formData.pickupLocation,
       totalPrice,
     });
     setIsSubmitted(true);
   };
 
   const isStep1Valid = formData.pickupDate && formData.returnDate && formData.pickupLocation
+    && (formData.pickupLocation !== 'otro' || formData.customPickupAddress.trim())
     && (!formData.tourName || formData.tourDate);
   const isStep2Valid = user && formData.customerName && formData.customerEmail && formData.customerPhone;
 
@@ -203,11 +216,11 @@ const ReservationModal = ({ isOpen, onClose, onOpenAuth, initialTourName, car, o
                 </div>
                 <div className="flex justify-between">
                   <span className="text-white/60">Fecha recogida:</span>
-                  <span className="text-white font-medium">{new Date(formData.pickupDate).toLocaleDateString('es-CO')}</span>
+                  <span className="text-white font-medium">{parseLocalDate(formData.pickupDate).toLocaleDateString('es-CO')}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-white/60">Fecha devolución:</span>
-                  <span className="text-white font-medium">{new Date(formData.returnDate).toLocaleDateString('es-CO')}</span>
+                  <span className="text-white font-medium">{parseLocalDate(formData.returnDate).toLocaleDateString('es-CO')}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-white/60">Total:</span>
@@ -265,7 +278,7 @@ const ReservationModal = ({ isOpen, onClose, onOpenAuth, initialTourName, car, o
                     </label>
                     <select
                       value={formData.pickupLocation}
-                      onChange={(e) => setFormData({ ...formData, pickupLocation: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, pickupLocation: e.target.value, customPickupAddress: '' })}
                       className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500/50 transition-colors"
                     >
                       <option value="Aeropuerto José María Córdova" className="bg-black">Aeropuerto José María Córdova</option>
@@ -273,8 +286,21 @@ const ReservationModal = ({ isOpen, onClose, onOpenAuth, initialTourName, car, o
                       <option value="Centro de Medellín" className="bg-black">Centro de Medellín</option>
                       <option value="Envigado" className="bg-black">Envigado</option>
                       <option value="Sabaneta" className="bg-black">Sabaneta</option>
-                      <option value="Otro lugar (especificar en notas)" className="bg-black">Otro lugar</option>
+                      <option value="otro" className="bg-black">Otro lugar...</option>
                     </select>
+
+                  {formData.pickupLocation === 'otro' && (
+                    <div className="mt-3">
+                      <input
+                        type="text"
+                        placeholder="Escribe la dirección de recogida..."
+                        value={formData.customPickupAddress}
+                        onChange={(e) => setFormData({ ...formData, customPickupAddress: e.target.value })}
+                        autoFocus
+                        className="w-full bg-white/5 border border-red-500/30 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-red-500/60 transition-colors"
+                      />
+                    </div>
+                  )}
                   </div>
 
                   <div className="flex items-center gap-3 glass rounded-xl p-4">
