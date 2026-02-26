@@ -1,8 +1,19 @@
 import { Pool } from 'pg';
 
-// Remove channel_binding param — not supported by node-postgres driver
+// Use NEON_DATABASE_URL first, fall back to DATABASE_URL
 const rawConn = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL || '';
-const connString = rawConn.replace(/[?&]channel_binding=[^&]*/g, '').replace(/\?&/, '?');
+
+// Remove channel_binding param — not supported by node-postgres driver
+let connString = rawConn;
+try {
+    const u = new URL(rawConn);
+    u.searchParams.delete('channel_binding');
+    connString = u.toString();
+} catch {
+    // rawConn was empty or invalid, keep as-is
+}
+
+console.log('Connecting to DB host:', (() => { try { return new URL(connString).hostname; } catch { return 'unknown'; } })());
 
 const pool = new Pool({
     connectionString: connString,
