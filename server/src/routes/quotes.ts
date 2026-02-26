@@ -3,7 +3,7 @@ import { getDb } from '../db';
 import jwt from 'jsonwebtoken';
 
 const router = Router();
-const JWT_SECRET = 'super-secret-key-change-me-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-change-me-in-production';
 
 const requireAdmin = (req: any, res: any, next: any) => {
     const token = req.headers.authorization?.split(' ')[1];
@@ -26,11 +26,11 @@ router.post('/', async (req, res) => {
         if (!name || !email || !phone || !message) {
             return res.status(400).json({ error: 'Todos los campos son requeridos' });
         }
-        const result = await db.run(
-            `INSERT INTO quotes (name, email, phone, message) VALUES (?, ?, ?, ?)`,
+        const result = await db.query(
+            `INSERT INTO quotes (name, email, phone, message) VALUES ($1, $2, $3, $4) RETURNING id`,
             [name, email, phone, message]
         );
-        const quote = await db.get('SELECT * FROM quotes WHERE id = ?', [result.lastID]);
+        const quote = (await db.query('SELECT * FROM quotes WHERE id = $1', [result.rows[0].id])).rows[0];
         res.status(201).json(quote);
     } catch (error) {
         console.error(error);
@@ -42,7 +42,7 @@ router.post('/', async (req, res) => {
 router.get('/', requireAdmin, async (_req, res) => {
     try {
         const db = await getDb();
-        const quotes = await db.all('SELECT * FROM quotes ORDER BY createdAt DESC');
+        const quotes = (await db.query('SELECT * FROM quotes ORDER BY "createdAt" DESC')).rows;
         res.json(quotes);
     } catch (error) {
         console.error(error);
@@ -58,8 +58,8 @@ router.patch('/:id/status', requireAdmin, async (req, res) => {
         if (!['new', 'attended'].includes(status)) {
             return res.status(400).json({ error: 'Estado inválido' });
         }
-        await db.run('UPDATE quotes SET status = ? WHERE id = ?', [status, req.params.id]);
-        const quote = await db.get('SELECT * FROM quotes WHERE id = ?', [req.params.id]);
+        await db.query('UPDATE quotes SET status = $1 WHERE id = $2', [status, req.params.id]);
+        const quote = (await db.query('SELECT * FROM quotes WHERE id = $1', [req.params.id])).rows[0];
         res.json(quote);
     } catch (error) {
         console.error(error);
@@ -71,7 +71,7 @@ router.patch('/:id/status', requireAdmin, async (req, res) => {
 router.delete('/:id', requireAdmin, async (req, res) => {
     try {
         const db = await getDb();
-        await db.run('DELETE FROM quotes WHERE id = ?', [req.params.id]);
+        await db.query('DELETE FROM quotes WHERE id = $1', [req.params.id]);
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: 'Error al eliminar cotización' });

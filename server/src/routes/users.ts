@@ -3,7 +3,7 @@ import { getDb } from '../db';
 import jwt from 'jsonwebtoken';
 
 const router = Router();
-const JWT_SECRET = 'super-secret-key-change-me-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-change-me-in-production';
 
 const requireAdmin = (req: any, res: any, next: any) => {
     const token = req.headers.authorization?.split(' ')[1];
@@ -22,7 +22,7 @@ const requireAdmin = (req: any, res: any, next: any) => {
 router.get('/', requireAdmin, async (req: any, res) => {
     try {
         const db = await getDb();
-        const users = await db.all('SELECT id, name, email, phone, role, createdAt, avatar FROM users');
+        const users = (await db.query('SELECT id, name, email, phone, role, "createdAt", avatar FROM users')).rows;
         res.json(users);
     } catch (error) {
         console.error(error);
@@ -38,11 +38,11 @@ router.patch('/:id/role', requireAdmin, async (req: any, res) => {
             return res.status(400).json({ error: 'Rol inválido' });
         }
         const db = await getDb();
-        await db.run('UPDATE users SET role = ? WHERE id = ?', [role, req.params.id]);
-        const updated = await db.get(
-            'SELECT id, name, email, phone, role, createdAt, avatar FROM users WHERE id = ?',
+        await db.query('UPDATE users SET role = $1 WHERE id = $2', [role, req.params.id]);
+        const updated = (await db.query(
+            'SELECT id, name, email, phone, role, "createdAt", avatar FROM users WHERE id = $1',
             [req.params.id]
-        );
+        )).rows[0];
         res.json(updated);
     } catch (error) {
         console.error(error);

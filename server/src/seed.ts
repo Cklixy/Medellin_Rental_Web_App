@@ -1,5 +1,6 @@
 import { getDb } from './db';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 const ALL_CARS = [
     {
@@ -362,40 +363,26 @@ async function seed() {
     const adminId = crypto.randomUUID();
     const hashedPassword = await bcrypt.hash('admin123', 10);
 
-    await db.run(
-        `INSERT OR IGNORE INTO users (id, name, email, password, phone, role) VALUES (?, ?, ?, ?, ?, ?)`,
-        [
-            adminId,
-            'Administrador',
-            'admin@carrentalmedellin.com',
-            hashedPassword,
-            '+57 300 000 0000',
-            'admin'
-        ]
+    await db.query(
+        `INSERT INTO users (id, name, email, password, phone, role)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         ON CONFLICT (email) DO NOTHING`,
+        [adminId, 'Administrador', 'admin@carrentalmedellin.com', hashedPassword, '+57 300 000 0000', 'admin']
     );
     console.log('✅ Admin user created/verified');
 
     // Insert cars
     let insertedCars = 0;
     for (const car of ALL_CARS) {
-        const existing = await db.get('SELECT id FROM cars WHERE id = ?', [car.id]);
+        const existing = (await db.query('SELECT id FROM cars WHERE id = $1', [car.id])).rows[0];
         if (!existing) {
-            await db.run(
+            await db.query(
                 `INSERT INTO cars (id, name, category, image, price, seats, transmission, fuel, features, description, year, available)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
                 [
-                    car.id,
-                    car.name,
-                    car.category,
-                    car.image,
-                    car.price,
-                    car.seats,
-                    car.transmission,
-                    car.fuel,
-                    JSON.stringify(car.features),
-                    car.description,
-                    car.year,
-                    car.available ? 1 : 0
+                    car.id, car.name, car.category, car.image, car.price,
+                    car.seats, car.transmission, car.fuel,
+                    JSON.stringify(car.features), car.description, car.year, car.available
                 ]
             );
             insertedCars++;
@@ -407,7 +394,8 @@ async function seed() {
 
 export async function runSeed() {
     const db = await getDb();
-    const { count } = await db.get('SELECT COUNT(*) as count FROM cars') as { count: number };
+    const { rows } = await db.query('SELECT COUNT(*) as count FROM cars');
+    const count = parseInt(rows[0].count);
     if (count === 0) {
         console.log('📦 Empty database detected, running seed...');
         await seed();

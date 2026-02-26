@@ -11,10 +11,10 @@ async function exportDatabase() {
 
     console.log('Exportando base de datos SQLite...');
 
-    const users = await db.all('SELECT * FROM users');
-    const cars = await db.all('SELECT * FROM cars');
-    const reservations = await db.all('SELECT * FROM reservations');
-    const quotes = await db.all('SELECT * FROM quotes').catch(() => []);
+    const users = (await db.query('SELECT * FROM users')).rows;
+    const cars = (await db.query('SELECT * FROM cars')).rows;
+    const reservations = (await db.query('SELECT * FROM reservations')).rows;
+    const quotes = await db.query('SELECT * FROM quotes').then(r => r.rows).catch(() => []);
 
     const exportData = {
         exportedAt: new Date().toISOString(),

@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { getDb } from './db';
+import { getDb, initializeSchema } from './db';
 import { runSeed } from './seed';
 import authRoutes from './routes/auth';
 import carsRoutes from './routes/cars';
@@ -31,8 +31,8 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Init DB and auto-seed if empty
-getDb().then(() => runSeed()).catch(console.error);
+// Init DB schema and auto-seed if empty
+initializeSchema().then(() => runSeed()).catch(console.error);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/cars', carsRoutes);

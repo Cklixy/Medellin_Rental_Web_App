@@ -1,16 +1,13 @@
 import { Router } from 'express';
 import { getDb } from '../db';
-import { v4 as uuidv4 } from 'uuid';
 import jwt from 'jsonwebtoken';
 
 const router = Router();
-const JWT_SECRET = 'super-secret-key-change-me-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-change-me-in-production';
 
-// Auth middleware
 const requireAuth = (req: any, res: any, next: any) => {
     const authHeader = req.headers.authorization;
     if (!authHeader) return res.status(401).json({ error: 'No token provided' });
-
     const token = authHeader.split(' ')[1];
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
@@ -26,16 +23,12 @@ router.get('/', requireAuth, async (req: any, res) => {
     try {
         const db = await getDb();
         let reservations;
-
         if (req.user.role === 'admin') {
-            reservations = await db.all('SELECT * FROM reservations');
+            reservations = (await db.query('SELECT * FROM reservations')).rows;
         } else {
-            reservations = await db.all('SELECT * FROM reservations WHERE userId = ?', [req.user.id]);
+            reservations = (await db.query('SELECT * FROM reservations WHERE "userId" = $1', [req.user.id])).rows;
         }
-
-        // Format boolean
-        const formatted = reservations.map(r => ({ ...r, withDriver: r.withDriver === 1 }));
-        res.json(formatted);
+        res.json(reservations);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Error al obtener reservaciones' });
@@ -54,20 +47,20 @@ router.post('/', requireAuth, async (req: any, res) => {
             additionalNotes, totalPrice, tourName, tourDate
         } = req.body;
 
-        await db.run(
-            `INSERT INTO reservations 
-        (id, carId, userId, customerName, customerEmail, customerPhone, pickupDate, returnDate, pickupLocation, withDriver, additionalNotes, totalPrice, status, tourName, tourDate)
-       VALUES 
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        await db.query(
+            `INSERT INTO reservations
+        (id, "carId", "userId", "customerName", "customerEmail", "customerPhone", "pickupDate", "returnDate", "pickupLocation", "withDriver", "additionalNotes", "totalPrice", status, "tourName", "tourDate")
+       VALUES
+        ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
             [
                 id, carId, userId, customerName, customerEmail, customerPhone,
-                pickupDate, returnDate, pickupLocation, withDriver ? 1 : 0,
+                pickupDate, returnDate, pickupLocation, withDriver ?? false,
                 additionalNotes || '', totalPrice, 'pending', tourName || '', tourDate || ''
             ]
         );
 
-        const newReservation = await db.get('SELECT * FROM reservations WHERE id = ?', [id]);
-        res.status(201).json({ ...newReservation, withDriver: newReservation.withDriver === 1 });
+        const newReservation = (await db.query('SELECT * FROM reservations WHERE id = $1', [id])).rows[0];
+        res.status(201).json(newReservation);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Error al crear la reservación' });
@@ -80,16 +73,14 @@ router.patch('/:id/status', requireAuth, async (req: any, res) => {
         if (req.user.role !== 'admin') {
             return res.status(403).json({ error: 'Unauthorized' });
         }
-
         const { status, adminMessage } = req.body;
         const db = await getDb();
-
-        await db.run(
-            'UPDATE reservations SET status = ?, adminMessage = ? WHERE id = ?',
+        await db.query(
+            'UPDATE reservations SET status = $1, "adminMessage" = $2 WHERE id = $3',
             [status, adminMessage ?? '', req.params.id]
         );
-        const updated = await db.get('SELECT * FROM reservations WHERE id = ?', [req.params.id]);
-        res.json({ ...updated, withDriver: updated.withDriver === 1 });
+        const updated = (await db.query('SELECT * FROM reservations WHERE id = $1', [req.params.id])).rows[0];
+        res.json(updated);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Error al actualizar' });
