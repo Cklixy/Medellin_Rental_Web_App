@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import type { Car, Reservation, User } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/services/api';
+import { parseLocalDate } from '@/lib/utils';
 
 export const useReservations = () => {
   const { user } = useAuth();
@@ -53,8 +54,8 @@ export const useReservations = () => {
   }, []);
 
   const calculateTotalPrice = useCallback((car: Car, pickupDate: string, returnDate: string, withDriver: boolean) => {
-    const start = new Date(pickupDate);
-    const end = new Date(returnDate);
+    const start = parseLocalDate(pickupDate);
+    const end = parseLocalDate(returnDate);
     const days = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
     const driverCost = withDriver ? 200000 * days : 0;
     return (car.price * days) + driverCost;
@@ -120,6 +121,9 @@ export const useAdmin = () => {
 
   useEffect(() => {
     refreshData();
+    // Poll every 30 seconds so admin data stays fresh without manual refresh
+    const interval = setInterval(refreshData, 30000);
+    return () => clearInterval(interval);
   }, [refreshData]);
 
   // Compute stats derived from data

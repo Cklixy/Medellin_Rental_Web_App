@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useReservations';
 import { api } from '@/services/api';
 import { toast } from 'sonner';
+import { fmtDate } from '@/lib/utils';
 import type { Reservation, Quote, Car as CarType } from '@/types';
 import AdminChatTab from '@/components/chat/AdminChatTab';
 
@@ -389,8 +390,8 @@ const AdminDashboard = ({ isOpen, onClose }: AdminDashboardProps) => {
                           <td className="p-4 text-white text-sm">{user?.name || reservation.customerName}</td>
                           <td className="p-4 text-white text-sm">{car?.name || 'N/A'}</td>
                           <td className="p-4 text-white/70 text-sm">
-                            {new Date(reservation.pickupDate).toLocaleDateString('es-CO')} - 
-                            {new Date(reservation.returnDate).toLocaleDateString('es-CO')}
+                            {fmtDate(reservation.pickupDate)} - 
+                            {fmtDate(reservation.returnDate)}
                           </td>
                           <td className="p-4 text-red-500 font-semibold text-sm">
                             {formatPrice(reservation.totalPrice)}

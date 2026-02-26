@@ -494,11 +494,11 @@ const ReservationModal = ({ isOpen, onClose, onOpenAuth, initialTourName, car, o
                       </div>
                       <div className="flex justify-between">
                         <span className="text-white/60">Recogida:</span>
-                        <span className="text-white">{new Date(formData.pickupDate).toLocaleDateString('es-CO')}</span>
+                        <span className="text-white">{parseLocalDate(formData.pickupDate).toLocaleDateString('es-CO')}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-white/60">Devolución:</span>
-                        <span className="text-white">{new Date(formData.returnDate).toLocaleDateString('es-CO')}</span>
+                        <span className="text-white">{parseLocalDate(formData.returnDate).toLocaleDateString('es-CO')}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-white/60">Duración:</span>

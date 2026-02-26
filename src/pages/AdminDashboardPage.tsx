@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import {
   Users, Car, Calendar, DollarSign, TrendingUp,
   Trash2, Check, XCircle, Clock, Search,
-  LogOut, BarChart3, Plus, Shield,
+  LogOut, BarChart3, Plus, Shield, RefreshCw,
   MessageSquare, MessageCircle, ChevronDown, Phone, Mail,
   FileText, Inbox, CheckCheck,
 } from 'lucide-react';
 import AdminChatTab from '@/components/chat/AdminChatTab';
+import { fmtDate } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useReservations';
 import { api } from '@/services/api';
@@ -243,7 +244,7 @@ export default function AdminDashboardPage() {
   const { logout, user: authUser } = useAuth();
   const {
     cars, allReservations, allUsers, stats,
-    addCar, deleteCar, updateReservationStatus, updateUserRole,
+    addCar, deleteCar, updateReservationStatus, updateUserRole, refreshData,
   } = useAdmin();
 
   const [tab, setTab]             = useState<'dashboard' | 'cars' | 'reservations' | 'users' | 'quotes' | 'chat'>('dashboard');
@@ -308,13 +309,23 @@ export default function AdminDashboardPage() {
               <p className="text-white/50 text-sm">Gestión completa del sistema</p>
             </div>
           </div>
-          <button
-            onClick={() => { logout(); window.location.href = '/'; }}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl glass text-white/70 hover:text-red-500 hover:bg-red-500/10 transition-all"
-          >
-            <LogOut className="w-4 h-4" />
-            <span className="text-sm">Cerrar Sesión</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => refreshData()}
+              title="Actualizar datos"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl glass text-white/70 hover:text-white hover:bg-white/10 transition-all"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span className="text-sm">Actualizar</span>
+            </button>
+            <button
+              onClick={() => { logout(); window.location.href = '/'; }}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl glass text-white/70 hover:text-red-500 hover:bg-red-500/10 transition-all"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="text-sm">Cerrar Sesión</span>
+            </button>
+          </div>
         </div>
 
         {/* Tabs */}
@@ -523,11 +534,11 @@ export default function AdminDashboardPage() {
                           </div>
                           <div>
                             <p className="text-white/40 text-xs mb-0.5">Recogida</p>
-                            <p className="text-white/80">{new Date(reservation.pickupDate).toLocaleDateString('es-CO')}</p>
+                            <p className="text-white/80">{fmtDate(reservation.pickupDate)}</p>
                           </div>
                           <div>
                             <p className="text-white/40 text-xs mb-0.5">Devolución</p>
-                            <p className="text-white/80">{new Date(reservation.returnDate).toLocaleDateString('es-CO')}</p>
+                            <p className="text-white/80">{fmtDate(reservation.returnDate)}</p>
                           </div>
                           <div>
                             <p className="text-white/40 text-xs mb-0.5">Lugar de recogida</p>

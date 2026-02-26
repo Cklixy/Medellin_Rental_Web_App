@@ -3,6 +3,7 @@ import { X, Calendar, Car, DollarSign, MapPin, Phone, Mail, User, LogOut, Check,
 import { useAuth } from '@/contexts/AuthContext';
 import { useReservationsContext } from '@/contexts/ReservationsContext';
 import { toast } from 'sonner';
+import { fmtDate } from '@/lib/utils';
 import type { Reservation } from '@/types';
 
 interface UserDashboardProps {
@@ -165,13 +166,13 @@ const UserDashboard = ({ isOpen, onClose }: UserDashboardProps) => {
                           <div className="text-white/50 text-xs mb-1 flex items-center gap-1">
                             <Calendar className="w-3 h-3" /> Recogida
                           </div>
-                          <div className="text-white text-sm">{new Date(reservation.pickupDate).toLocaleDateString('es-CO')}</div>
+                          <div className="text-white text-sm">{fmtDate(reservation.pickupDate)}</div>
                         </div>
                         <div>
                           <div className="text-white/50 text-xs mb-1 flex items-center gap-1">
                             <Calendar className="w-3 h-3" /> Devolución
                           </div>
-                          <div className="text-white text-sm">{new Date(reservation.returnDate).toLocaleDateString('es-CO')}</div>
+                          <div className="text-white text-sm">{fmtDate(reservation.returnDate)}</div>
                         </div>
                         <div>
                           <div className="text-white/50 text-xs mb-1 flex items-center gap-1">
