@@ -405,4 +405,18 @@ async function seed() {
     console.log('🌱 Seed complete!');
 }
 
-seed().catch(console.error);
+export async function runSeed() {
+    const db = await getDb();
+    const { count } = await db.get('SELECT COUNT(*) as count FROM cars') as { count: number };
+    if (count === 0) {
+        console.log('📦 Empty database detected, running seed...');
+        await seed();
+    } else {
+        console.log(`📦 Database already has ${count} cars, skipping seed.`);
+    }
+}
+
+// Allow running directly: ts-node src/seed.ts
+if (require.main === module) {
+    seed().catch(console.error);
+}
