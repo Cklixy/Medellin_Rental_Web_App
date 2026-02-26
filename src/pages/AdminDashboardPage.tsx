@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Users, Car, Calendar, DollarSign, TrendingUp,
   Trash2, Check, XCircle, Clock, Search,
   LogOut, BarChart3, Plus, Shield,
-  MessageSquare, ChevronDown, Phone, Mail,
+  MessageSquare, MessageCircle, ChevronDown, Phone, Mail,
   FileText, Inbox, CheckCheck,
 } from 'lucide-react';
+import AdminChatTab from '@/components/chat/AdminChatTab';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useReservations';
 import { api } from '@/services/api';
@@ -245,7 +246,7 @@ export default function AdminDashboardPage() {
     addCar, deleteCar, updateReservationStatus, updateUserRole,
   } = useAdmin();
 
-  const [tab, setTab]             = useState<'dashboard' | 'cars' | 'reservations' | 'users' | 'quotes'>('dashboard');
+  const [tab, setTab]             = useState<'dashboard' | 'cars' | 'reservations' | 'users' | 'quotes' | 'chat'>('dashboard');
   const [carSearch, setCarSearch]   = useState('');
   const [showAddCar, setShowAddCar] = useState(false);
   const [expandedRes, setExpandedRes] = useState<string | null>(null);
@@ -317,18 +318,19 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-white/10 bg-black/30 shrink-0">
+        <div className="flex border-b border-white/10 bg-black/30 shrink-0 overflow-x-auto">
           {([
-                      { id: 'dashboard',    label: 'Dashboard',    Icon: BarChart3  },
-            { id: 'cars',         label: 'Vehículos',    Icon: Car        },
-            { id: 'reservations', label: 'Reservas',     Icon: Calendar   },
-            { id: 'users',        label: 'Clientes',     Icon: Users      },
-            { id: 'quotes',       label: 'Cotizaciones', Icon: FileText   },
-          ] as const).map(({ id, label, Icon }) => (
+            { id: 'dashboard',    label: 'Dashboard',    Icon: BarChart3      },
+            { id: 'cars',         label: 'Vehículos',    Icon: Car            },
+            { id: 'reservations', label: 'Reservas',     Icon: Calendar       },
+            { id: 'users',        label: 'Clientes',     Icon: Users          },
+            { id: 'quotes',       label: 'Cotizaciones', Icon: FileText       },
+            { id: 'chat',         label: 'Chat',         Icon: MessageCircle  },
+          ] as { id: typeof tab; label: string; Icon: React.ElementType }[]).map(({ id, label, Icon }) => (
             <button
               key={id}
               onClick={() => setTab(id)}
-              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
+              className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-4 text-sm font-medium transition-colors whitespace-nowrap ${
                 tab === id
                   ? 'text-red-500 border-b-2 border-red-500 bg-red-500/5'
                   : 'text-white/50 hover:text-white hover:bg-white/5'
@@ -735,6 +737,14 @@ export default function AdminDashboardPage() {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* ── CHAT ── */}
+          {tab === 'chat' && (
+            <div className="space-y-4">
+              <h3 className="text-white font-semibold text-lg">Chat con Clientes</h3>
+              <AdminChatTab />
             </div>
           )}
 

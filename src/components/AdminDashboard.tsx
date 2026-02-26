@@ -190,7 +190,7 @@ const AdminDashboard = ({ isOpen, onClose }: AdminDashboardProps) => {
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-white/10 bg-black/30 overflow-x-auto">
+        <div className="flex border-b border-white/10 bg-black/30 overflow-x-auto scrollbar-none">
           {[
             { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
             { id: 'cars', label: 'Vehículos', icon: Car },
@@ -202,7 +202,7 @@ const AdminDashboard = ({ isOpen, onClose }: AdminDashboardProps) => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
+              className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-4 text-sm font-medium transition-colors whitespace-nowrap ${
                 activeTab === tab.id 
                   ? 'text-red-500 border-b-2 border-red-500 bg-red-500/5' 
                   : 'text-white/50 hover:text-white hover:bg-white/5'
